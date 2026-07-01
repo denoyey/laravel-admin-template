@@ -37,6 +37,7 @@ class InstallCommand extends Command
             'app/Http/Controllers/Admin' => app_path('Http/Controllers/Admin'),
             'app/Http/Controllers/Auth' => app_path('Http/Controllers/Auth'),
             'app/Http/Middleware' => app_path('Http/Middleware'),
+            'app/Http/Requests' => app_path('Http/Requests'),
             'app/Models' => app_path('Models'),
             'resources/views/layouts' => resource_path('views/layouts'),
             'resources/views/components/admin' => resource_path('views/components/admin'),
