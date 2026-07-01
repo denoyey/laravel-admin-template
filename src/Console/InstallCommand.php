@@ -69,16 +69,26 @@ class InstallCommand extends Command
     protected function updateRoutes()
     {
         $this->info('Updating routes/web.php...');
-        $routesStub = File::get(__DIR__.'/../../stubs/routes/web-admin-stub.php');
-        
-        $routesStub = preg_replace('/^<\?php\s*/', '', $routesStub);
-        
         $webRoutesPath = base_path('routes/web.php');
-        
         $currentRoutes = File::get($webRoutesPath);
-        if (!str_contains($currentRoutes, 'Route::prefix(\'/portal-admin\')')) {
-            File::append($webRoutesPath, "\n" . $routesStub);
+
+        $useStatements = "use App\Http\Controllers\Admin\DashboardController;\nuse App\Http\Controllers\Auth\LoginController;\n";
+        
+        if (!str_contains($currentRoutes, 'DashboardController')) {
+            $currentRoutes = preg_replace('/(<\?php\s*)/', "$1\n" . $useStatements, $currentRoutes);
         }
+
+        if (!str_contains($currentRoutes, "Route::prefix('/portal-admin')")) {
+            $routesStub = File::get(__DIR__.'/../../stubs/routes/web-admin-stub.php');
+            
+            $routeContent = strstr($routesStub, '// Admin Portal Routes');
+            
+            if ($routeContent) {
+                $currentRoutes .= "\n\n" . $routeContent;
+            }
+        }
+        
+        File::put($webRoutesPath, $currentRoutes);
     }
 
     protected function updateCss()
