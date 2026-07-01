@@ -70,6 +70,9 @@ class InstallCommand extends Command
     {
         $this->info('Updating routes/web.php...');
         $routesStub = File::get(__DIR__.'/../../stubs/routes/web-admin-stub.php');
+        
+        $routesStub = preg_replace('/^<\?php\s*/', '', $routesStub);
+        
         $webRoutesPath = base_path('routes/web.php');
         
         $currentRoutes = File::get($webRoutesPath);
