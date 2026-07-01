@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Portal Admin PT Kalpataru Surya Abadi">
+    <meta name="description" content="Portal Admin Denoyey">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="form-cooldown" content="{{ \App\Http\Middleware\PreventSpamSubmit::COOLDOWN_SECONDS * 1000 }}">
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
@@ -13,7 +13,7 @@
     <meta name="idle-timeout-enabled" content="{{ config('session.idle_timeout_enabled', false) }}">
     <meta name="idle-timeout-minutes" content="{{ config('session.idle_timeout_minutes', 1) }}">
 
-    <title>@yield('title', 'Dashboard') - Portal KSA</title>
+    <title>@yield('title', 'Dashboard') - Admin Portal</title>
 
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('src/favicon/apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('src/favicon/favicon-32x32.png') }}">
@@ -43,7 +43,7 @@
                         @yield('page-title', 'Dashboard')
                     </h1>
                     <p class="text-[11px] sm:text-[13px] text-gray-500 mt-0.5 sm:mt-1">
-                        @yield('page-subtitle', 'Selamat datang di Portal KSA')
+                        @yield('page-subtitle', 'Selamat datang di Admin Portal')
                     </p>
                 </div>
                 @hasSection('page-actions')
@@ -58,13 +58,13 @@
 
         <footer class="px-4 md:px-5 lg:px-6 pb-4 pt-2 mt-auto">
             <p class="text-[10px] text-gray-500 text-center">
-                &copy; {{ date('Y') }} PT Kalpataru Surya Abadi. All rights reserved.
+                &copy; {{ date('Y') }} Denoyey. All rights reserved.
             </p>
             <p class="text-[10px] text-gray-500 text-center mt-0.5">
                 Developed by
-                <a href="https://iexxass.com/" target="_blank" rel="noopener noreferrer"
+                <a href="https://github.com/denoyey" target="_blank" rel="noopener noreferrer"
                     class="text-[#4860BE] font-semibold hover:underline">
-                    I'Exxass
+                    Denoyey
                 </a>
             </p>
         </footer>

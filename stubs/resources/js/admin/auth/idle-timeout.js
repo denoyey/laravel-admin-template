@@ -24,7 +24,7 @@ class IdleTimeoutManager {
         this.keepAliveBtn = document.getElementById('btn-keep-alive');
         this.logoutForm = document.getElementById('form-idle-logout');
 
-        this.channel = new BroadcastChannel('ksa-idle-sync');
+        this.channel = new BroadcastChannel('denoyey-idle-sync');
 
         this.init();
     }
@@ -122,7 +122,7 @@ class IdleTimeoutManager {
                 const csrfMeta = document.querySelector('meta[name="csrf-token"]');
                 const token = csrfMeta ? csrfMeta.content : '';
 
-                await fetch('/portal-ksa/keep-alive', {
+                await fetch('/portal-admin/keep-alive', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -196,7 +196,7 @@ class IdleTimeoutManager {
                 const csrfMeta = document.querySelector('meta[name="csrf-token"]');
                 const token = csrfMeta ? csrfMeta.content : '';
 
-                const response = await fetch('/portal-ksa/logout', {
+                const response = await fetch('/portal-admin/logout', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': token,
@@ -214,9 +214,9 @@ class IdleTimeoutManager {
                     }
                 }
 
-                window.location.href = '/portal-ksa/login?logged_out=1&idle=1';
+                window.location.href = '/portal-admin/login?logged_out=1&idle=1';
             } catch (error) {
-                window.location.href = '/portal-ksa/login?logged_out=1&idle=1';
+                window.location.href = '/portal-admin/login?logged_out=1&idle=1';
             }
         } else {
             window.location.reload();
@@ -232,7 +232,7 @@ class IdleTimeoutManager {
             const csrfMeta = document.querySelector('meta[name="csrf-token"]');
             const token = csrfMeta ? csrfMeta.content : '';
 
-            await fetch('/portal-ksa/keep-alive', {
+            await fetch('/portal-admin/keep-alive', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

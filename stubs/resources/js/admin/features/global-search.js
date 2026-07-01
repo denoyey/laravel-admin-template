@@ -70,7 +70,7 @@ export function initGlobalSearch() {
 
         showState('loading');
 
-        fetch(`/portal-ksa/global-search?query=${encodeURIComponent(query)}`, {
+        fetch(`/portal-admin/global-search?query=${encodeURIComponent(query)}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'

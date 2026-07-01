@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Rules\RecaptchaRule;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -36,6 +37,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'g-recaptcha-response' => ['required', new RecaptchaRule],
         ];
     }
 
@@ -45,6 +47,7 @@ class LoginRequest extends FormRequest
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
             'password.required' => 'Password wajib diisi.',
+            'g-recaptcha-response.required' => 'Mohon centang verifikasi keamanan (reCAPTCHA).',
         ];
     }
 
@@ -79,6 +82,11 @@ class LoginRequest extends FormRequest
     public function ensureIsNotRateLimited(): void
     {
         $decaySeconds = self::DECAY_MINUTES * 60;
+
+        if (! empty($this->input('__ks'))) {
+            sleep(rand(1, 2));
+            abort(429, '', ['Retry-After' => $decaySeconds]);
+        }
 
         $userAgent = $this->header('User-Agent');
         if (empty($userAgent) || strlen(trim($userAgent)) < 15) {

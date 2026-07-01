@@ -9,9 +9,9 @@
  *   localStorage.setItem(StorageKeys.LOGOUT_TRIGGER, Date.now().toString());
  */
 const StorageKeys = Object.freeze({
-    LOGOUT_TRIGGER: 'ksa-logout-trigger',
-    LOGIN_TRIGGER: 'ksa-login-trigger',
-    RATE_LIMITED: 'ksa-rate-limited',
+    LOGOUT_TRIGGER: 'denoyey-logout-trigger',
+    LOGIN_TRIGGER: 'denoyey-login-trigger',
+    RATE_LIMITED: 'denoyey-rate-limited',
 });
 
 export { StorageKeys };

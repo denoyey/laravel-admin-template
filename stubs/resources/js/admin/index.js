@@ -23,6 +23,7 @@ import { initDashboardStats } from './features/dashboard-stats';
 import { initProfileSettings } from './features/profile-settings';
 import { initFormProtector } from './features/form-protector';
 import { initRecaptcha } from './features/recaptcha';
+import { initImageProtect } from './features/image-protect';
 import { initAdminAnimations } from './animations/index';
 
 import 'cropperjs/dist/cropper.css';
@@ -54,4 +55,5 @@ export function initAdminModules() {
     initDashboardStats();
     initProfileSettings();
     initRecaptcha();
+    initImageProtect();
 }

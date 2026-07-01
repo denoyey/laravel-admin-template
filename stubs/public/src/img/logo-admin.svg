@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Shield Background -->
+  <path d="M50 5 L90 20 L90 50 C90 75 50 95 50 95 C50 95 10 75 10 50 L10 20 Z" fill="#56ab4f" />
+  <!-- Letter D -->
+  <path d="M35 30 L55 30 C68 30 72 40 72 50 C72 60 68 70 55 70 L35 70 Z" fill="#ffffff" />
+  <path d="M45 40 L45 60 L53 60 C60 60 62 55 62 50 C62 45 60 40 53 40 Z" fill="#56ab4f" />
+</svg>

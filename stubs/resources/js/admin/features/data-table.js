@@ -18,17 +18,23 @@ class DataTable {
     }
 
     initLivewireHooks() {
-        if (typeof document !== 'undefined') {
-            document.addEventListener('livewire:initialized', () => {
-                if (window.Livewire) {
-                    window.Livewire.hook('morph.updated', () => {
-                        document.querySelectorAll('.data-table-wrapper').forEach(wrapper => {
-                            this.initSelectAllState();
-                            this.updateBulkActionsUI(wrapper);
-                        });
+        const setupHook = () => {
+            if (window.Livewire) {
+                window.Livewire.hook('morph.updated', () => {
+                    document.querySelectorAll('.data-table-wrapper').forEach(wrapper => {
+                        this.initSelectAllState();
+                        this.updateBulkActionsUI(wrapper);
                     });
-                }
-            });
+                });
+            }
+        };
+
+        if (typeof document !== 'undefined') {
+            if (window.Livewire) {
+                setupHook();
+            } else {
+                document.addEventListener('livewire:initialized', setupHook);
+            }
         }
     }
 

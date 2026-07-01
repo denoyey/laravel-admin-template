@@ -4,13 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Login Portal Admin PT Kalpataru Surya Abadi">
+    <meta name="description" content="Login Portal Admin Denoyey">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
     <meta name="googlebot" content="noindex, nofollow">
     <meta name="referrer" content="same-origin">
 
-    <title>Login - Portal KSA</title>
+    <title>Login - Admin Portal</title>
 
     @vite(['resources/css/app.css', 'resources/js/admin.js'])
 </head>
@@ -55,8 +55,8 @@
     <div class="grow flex items-center justify-center w-full">
         <div class="w-full max-w-sm bg-white rounded-md border border-gray-200 p-6 md:p-8 shadow-xs">
             <div class="flex justify-center mb-4">
-                <img src="{{ asset('src/img/LOGO-KSA.webp') }}" alt="Logo KSA" class="h-12 object-contain"
-                    width="207" height="209" loading="lazy">
+                <img src="{{ asset('src/img/logo-admin.svg') }}" alt="Logo Admin" class="h-12 object-contain"
+                    loading="lazy">
             </div>
 
             <h2 class="text-xs md:text-sm font-semibold text-center text-gray-800 mb-6">
@@ -137,13 +137,13 @@
 
     <footer class="w-full text-center mt-auto">
         <p class="text-[9px] md:text-[10px] text-gray-500 font-medium">
-            &copy; {{ date('Y') }} PT Kalpataru Surya Abadi. All rights reserved.
+            &copy; {{ date('Y') }} Denoyey. All rights reserved.
         </p>
         <p class="text-[9px] md:text-[10px] text-gray-500 font-medium mt-0.5">
             Developed by
-            <a href="https://iexxass.com/" target="_blank" rel="noopener noreferrer"
+            <a href="https://github.com/denoyey" target="_blank" rel="noopener noreferrer"
                 class="text-[#4860BE] font-semibold hover:underline">
-                I'Exxass
+                Denoyey
             </a>
         </p>
     </footer>

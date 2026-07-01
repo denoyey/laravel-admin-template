@@ -8,7 +8,7 @@
  *   import { PageReloader } from '../utils/page-reloader';
  *   PageReloader.reload();                       // Immediate reload
  *   PageReloader.reloadWithDelay(3000);           // Delayed reload (3s)
- *   PageReloader.reloadToUrl('/portal-ksa/login'); // Redirect to specific URL
+ *   PageReloader.reloadToUrl('/portal-admin/login'); // Redirect to specific URL
  */
 class PageReloader {
     /**
