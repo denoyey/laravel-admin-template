@@ -4,32 +4,35 @@ namespace Denoyey\AdminTemplate\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
 
 class InstallCommand extends Command
 {
     protected $signature = 'denoyey:install';
-
     protected $description = 'Install the Laravel Admin Template and Auth Starter Kit';
 
     public function handle()
     {
-        $this->info('Installing Laravel Admin Template by denoyey...');
+        $this->info('🚀 Installing Laravel Admin Template by denoyey...');
 
         $this->publishFiles();
         $this->updateRoutes();
         $this->updateCss();
         $this->updatePackageJson();
-        $this->instructComposer();
 
-        $this->info('Laravel Admin Template installed successfully!');
-        $this->warn('Please run "composer require spatie/laravel-permission intervention/image"');
-        $this->warn('Then run "npm install && npm run build"');
+        $this->requireComposerPackages();
+        $this->buildNodePackages();
+
+        $this->info('✅ Laravel Admin Template installed successfully!');
+        $this->info('🎉 Anda siap menggunakannya! Silakan jalankan:');
+        $this->warn('php artisan migrate');
+        $this->warn('php artisan db:seed --class=UserSeeder');
     }
 
     protected function publishFiles()
     {
         $this->info('Copying template files...');
-
+        
         $directories = [
             'app/Http/Controllers/Admin' => app_path('Http/Controllers/Admin'),
             'app/Http/Controllers/Auth' => app_path('Http/Controllers/Auth'),
@@ -57,8 +60,7 @@ class InstallCommand extends Command
                 }
             }
         }
-
-        // Copy root admin.js
+        
         if (File::exists(__DIR__.'/../../stubs/resources/js/admin.js')) {
             File::copy(__DIR__.'/../../stubs/resources/js/admin.js', resource_path('js/admin.js'));
         }
@@ -69,10 +71,10 @@ class InstallCommand extends Command
         $this->info('Updating routes/web.php...');
         $routesStub = File::get(__DIR__.'/../../stubs/routes/web-admin-stub.php');
         $webRoutesPath = base_path('routes/web.php');
-
+        
         $currentRoutes = File::get($webRoutesPath);
-        if (! str_contains($currentRoutes, 'Route::prefix(\'/portal-admin\')')) {
-            File::append($webRoutesPath, "\n".$routesStub);
+        if (!str_contains($currentRoutes, 'Route::prefix(\'/portal-admin\')')) {
+            File::append($webRoutesPath, "\n" . $routesStub);
         }
     }
 
@@ -82,7 +84,7 @@ class InstallCommand extends Command
         $appCssPath = resource_path('css/app.css');
         if (File::exists($appCssPath)) {
             $cssContent = File::get($appCssPath);
-            if (! str_contains($cssContent, '@import "tailwindcss";')) {
+            if (!str_contains($cssContent, '@import "tailwindcss";')) {
                 File::prepend($appCssPath, "@import \"tailwindcss\";\n");
             }
         } else {
@@ -92,39 +94,37 @@ class InstallCommand extends Command
 
     protected function updatePackageJson()
     {
-        $this->info('Updating package.json...');
+        $this->info('Updating package.json dependencies...');
         $packageJsonPath = base_path('package.json');
-
-        if (! File::exists($packageJsonPath)) {
-            return;
-        }
+        
+        if (!File::exists($packageJsonPath)) return;
 
         $packages = json_decode(File::get($packageJsonPath), true);
-
         $newDependencies = [
-            '@tailwindcss/vite' => '^4.0.0',
-            'tailwindcss' => '^4.0.0',
-            'axios' => '^1.7.4',
-            'gsap' => '^3.15.0',
-            'swiper' => '^12.1.4',
-            'cropperjs' => '^1.6.2',
+            "@tailwindcss/vite" => "^4.0.0",
+            "tailwindcss" => "^4.0.0",
+            "axios" => "^1.7.4",
+            "gsap" => "^3.15.0",
+            "swiper" => "^12.1.4",
+            "cropperjs" => "^1.6.2"
         ];
 
-        $packages['dependencies'] = array_merge(
-            $packages['dependencies'] ?? [],
-            $newDependencies
-        );
-
+        $packages['dependencies'] = array_merge($packages['dependencies'] ?? [], $newDependencies);
         ksort($packages['dependencies']);
-
-        File::put(
-            $packageJsonPath,
-            json_encode($packages, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT).PHP_EOL
-        );
+        File::put($packageJsonPath, json_encode($packages, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT).PHP_EOL);
     }
 
-    protected function instructComposer()
+    protected function requireComposerPackages()
     {
-        $this->info('You must install necessary composer packages for Spatie and Image Manipulation.');
+        $this->info('Installing Security & Image Packages (Spatie & Intervention)...');
+        Process::run('composer require spatie/laravel-permission intervention/image');
+        Process::run('php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"');
+    }
+
+    protected function buildNodePackages()
+    {
+        $this->info('Installing NPM Dependencies & Building Assets (Please wait)...');
+        Process::run('npm install');
+        Process::run('npm run build');
     }
 }
