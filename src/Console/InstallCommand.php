@@ -211,9 +211,10 @@ CSS;
 
             $cssContent = str_replace('@import "tailwindcss";', '', $cssContent);
             $cssContent = str_replace("@import 'tailwindcss';", '', $cssContent);
+            $cssContent = preg_replace('/@theme\s*\{[^}]*\}/s', '', $cssContent);
 
             if (! str_contains($cssContent, '--color-hijau')) {
-                File::put($appCssPath, $themeConfig."\n".trim($cssContent));
+                File::put($appCssPath, $themeConfig."\n\n".trim($cssContent));
             }
         } else {
             File::put($appCssPath, $themeConfig);
