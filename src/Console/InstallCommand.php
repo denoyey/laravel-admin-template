@@ -75,7 +75,7 @@ class InstallCommand extends Command
         $useStatements = "use App\Http\Controllers\Admin\DashboardController;\nuse App\Http\Controllers\Auth\LoginController;\n";
         
         if (!str_contains($currentRoutes, 'DashboardController')) {
-            $currentRoutes = preg_replace('/(<\?php\s*)/', "$1\n" . $useStatements, $currentRoutes);
+            $currentRoutes = preg_replace('/(<\?php\s*)/', "$1\n" . $useStatements, $currentRoutes, 1);
         }
 
         if (!str_contains($currentRoutes, "Route::prefix('/portal-admin')")) {
