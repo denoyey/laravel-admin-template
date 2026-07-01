@@ -165,8 +165,8 @@ PHP;
         });
 PHP;
 
-                $content = preg_replace('/(withMiddleware\(function\s*\(Middleware\s*\$middleware\)\s*\{)/', "$1\n".$aliasConfig, $content);
-                $content = preg_replace('/(withExceptions\(function\s*\(Exceptions\s*\$exceptions\)\s*:\s*void\s*\{)/', "$1\n".$exceptionsConfig, $content);
+                $content = preg_replace('/(withMiddleware\(function\s*\(Middleware\s*\$middleware\)(?:\s*:\s*void)?\s*\{)/', "$1\n".$aliasConfig, $content);
+                $content = preg_replace('/(withExceptions\(function\s*\(Exceptions\s*\$exceptions\)(?:\s*:\s*void)?\s*\{)/', "$1\n".$exceptionsConfig, $content);
 
                 File::put($appPath, $content);
             }
