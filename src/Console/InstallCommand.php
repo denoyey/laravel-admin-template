@@ -72,9 +72,16 @@ class InstallCommand extends Command
         $webRoutesPath = base_path('routes/web.php');
         $currentRoutes = File::get($webRoutesPath);
 
-        $useStatements = "use App\Http\Controllers\Admin\DashboardController;\nuse App\Http\Controllers\Auth\LoginController;\n";
+        $useStatements = "";
         
-        if (!str_contains($currentRoutes, 'DashboardController')) {
+        if (!str_contains($currentRoutes, 'use App\Http\Controllers\Admin\DashboardController;')) {
+            $useStatements .= "use App\Http\Controllers\Admin\DashboardController;\n";
+        }
+        if (!str_contains($currentRoutes, 'use App\Http\Controllers\Auth\LoginController;')) {
+            $useStatements .= "use App\Http\Controllers\Auth\LoginController;\n";
+        }
+        
+        if (!empty($useStatements)) {
             $currentRoutes = preg_replace('/(<\?php\s*)/', "$1\n" . $useStatements, $currentRoutes, 1);
         }
 
