@@ -51,7 +51,6 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

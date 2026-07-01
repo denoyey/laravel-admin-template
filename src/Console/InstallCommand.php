@@ -129,13 +129,14 @@ class InstallCommand extends Command
 
     protected function requireComposerPackages()
     {
-        $this->info('Installing Security & Image Packages (Spatie & Intervention)...');
+        $this->info('Installing Security, Logs & Image Packages...');
         
-        Process::forever()->run('composer require spatie/laravel-permission intervention/image', function (string $type, string $output) {
+        Process::forever()->run('composer require spatie/laravel-permission intervention/image spatie/laravel-activitylog', function (string $type, string $output) {
             $this->output->write($output);
         });
 
         Process::run('php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"');
+        Process::run('php artisan vendor:publish --provider="Spatie\Activitylog\ActivitylogServiceProvider" --tag="activitylog-migrations"');
     }
 
     protected function buildNodePackages()
