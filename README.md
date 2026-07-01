@@ -1,96 +1,56 @@
 # Laravel Admin Template & Auth Starter Kit
 
-A clean, modern, and OOP-based Admin Dashboard and Auth starter kit for Laravel 12.
-Created by **denoyey**.
+Sebuah *starter kit* profesional bergaya modern untuk membangun Dashboard Admin dan sistem Autentikasi (Login/Logout) di Laravel 12. Didesain dengan prinsip OOP (*Object-Oriented Programming*) yang ketat dan *Clean Code*.
 
-This package provides a beautifully crafted Admin Dashboard template with a fully functional Authentication system (Login/Logout), including advanced security features (Rate Limiting, Security Headers, Cross-Tab Session Sync), and auto-convert WebP image uploads using Cropper.js.
+Dikembangkan oleh **denoyey**.
 
-## Requirements
-- PHP ^8.2
-- Laravel ^12.0
-- Tailwind CSS v4
+---
 
-## Installation Guide
+## 🌟 Fitur Utama
+- **One-Command Install:** Proses instalasi otomatis layaknya Laravel Breeze.
+- **Sistem Keamanan Berlapis:** Meliputi *Rate Limiting*, *Security Headers*, pencegahan *Back History*, dan *Cross-Tab Session Sync*.
+- **Auto-Convert WebP:** Sudah dilengkapi komponen *upload* gambar mutakhir dengan integrasi `Cropper.js` untuk menghasilkan gambar WebP yang super ringan.
+- **Tailwind CSS v4 & Vite:** Menggunakan standar arsitektur CSS terbaru dari ekosistem Laravel 12.
+- **Role-Based Access Control:** Ditenagai oleh *Spatie Permission* yang siap pakai.
 
-Follow these steps carefully to install the template into a fresh Laravel project.
+---
 
-### Step 1: Install the Package
-Require the package using Composer:
+## 🚀 Panduan Instalasi (Hanya 3 Menit!)
+
+Pastikan Anda menginstalnya pada proyek **Laravel 12** yang masih **baru dan bersih** (fresh install).
+
+### 1. Require Package
+Tarik package ini ke dalam proyek Anda melalui Composer:
 ```bash
 composer require denoyey/laravel-admin-template
 ```
 
-### Step 2: Run the Install Command
-Publish all the template files (Controllers, Middleware, Views, JS, CSS, Routes, etc) to your project:
+### 2. Jalankan Installer Otomatis
+Eksekusi *command* ajaib ini. Sistem akan menyalin semua file UI, mengatur *routes*, serta menginstal semua kebutuhan Composer (Spatie & Intervention) dan NPM (Tailwind, GSAP, dll) secara gaib di belakang layar.
+
 ```bash
 php artisan denoyey:install
 ```
-*This command will copy all necessary files, configure Tailwind v4 in `resources/css/app.css`, and add required NPM dependencies to your `package.json`.*
+*(Proses ini membutuhkan waktu beberapa saat karena sistem sedang mengunduh Node Modules dan mem-build aset frontend Anda)*.
 
-### Step 3: Install Required PHP Packages
-This template relies on Spatie Permission for Role-Based Access Control (RBAC) and Intervention Image for WebP auto-conversion. Install them:
-```bash
-composer require spatie/laravel-permission intervention/image
-```
-
-### Step 4: Configure Spatie Permission
-Publish the Spatie Permission configuration and migration files:
-```bash
-php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
-```
-
-### Step 5: Setup Database & Run Migrations
-Ensure your `.env` file is properly configured with your database credentials. Then run migrations and seed the default Super Admin user:
+### 3. Setup Database
+Pastikan kredensial database di file `.env` Anda sudah diatur dengan benar, lalu jalankan migrasi dan seeder:
 ```bash
 php artisan migrate
 php artisan db:seed --class=UserSeeder
 ```
-*(Check `database/seeders/UserSeeder.php` to see the default login credentials).*
 
-### Step 6: Install NPM Dependencies & Build Assets
-Install the frontend libraries (Tailwind v4, GSAP, Swiper, Cropper.js, Axios) and build them:
-```bash
-npm install
-npm run build
-```
+Selesai! 🔥 
+Jalankan `php artisan serve` dan buka **`/portal-admin/login`** di browser Anda.
 
-### Step 7: Configure Vite (If necessary)
-Ensure your `vite.config.js` includes the admin entry points:
-```javascript
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
-import tailwindcss from '@tailwindcss/vite';
+---
 
-export default defineConfig({
-    plugins: [
-        laravel({
-            input: [
-                'resources/css/app.css',
-                'resources/css/admin-*.css', // If applicable
-                'resources/js/app.js',
-                'resources/js/admin.js' // Important for the admin template
-            ],
-            refresh: true,
-        }),
-        tailwindcss(),
-    ],
-});
-```
+## 🛠️ Komponen Tambahan (Upload WebP)
+Template ini menyertakan komponen Blade `<x-admin.forms.multi-image-upload />`. 
+Anda cukup memanggil komponen ini di dalam form Anda, dan ia akan mengurus sisanya: pratinjau gambar, antarmuka *cropping* untuk user, dan pengubahan format otomatis menjadi `.webp` demi SEO dan kecepatan *loading* yang maksimal.
 
-### Step 8: Done!
-Start your local server:
-```bash
-php artisan serve
-```
-Visit `http://localhost:8000/portal-admin/login` (or the route prefix defined in your routes) to access your brand new, highly secure Admin Dashboard!
+## 🔒 Catatan Keamanan
+Secara *default*, *middleware* keamanan sudah terpasang global pada rute `/portal-admin`. Pengguna tidak akan bisa mengakses halaman dashboard tanpa melewati autentikasi, dan tidak akan bisa *back* ke dashboard setelah melakukan proses *logout*.
 
-## Security Features Included
-- **Rate Limiting:** Protects the login route from brute-force attacks.
-- **Security Headers Middleware:** Adds `X-Frame-Options`, `X-XSS-Protection`, and more to all responses.
-- **Prevent Back History:** Ensures users cannot use the browser's back button to view the dashboard after logging out.
-- **Cross-Tab Session Sync:** Instantly logs out the user on all open tabs if they log out in one tab.
-
-## Uploading Images (Auto-Convert WebP)
-The included `<x-admin.forms.multi-image-upload />` component handles image selection and uses `Cropper.js` to let users crop images. The backend (or frontend JS) automatically handles converting these images to `.webp` format for ultimate performance.
-
-Enjoy building your next great application!
+---
+*Dibuat dengan dedikasi tinggi untuk developer Laravel.*
