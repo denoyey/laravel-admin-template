@@ -80,8 +80,8 @@ class InstallCommand extends Command
         $this->info("\n" . '🎨 Konfigurasi Font Dashboard (Tailwind CSS v4)');
         
         $choice = $this->choice(
-            'Apakah Anda ingin menginstall font baru dari Fontsource, atau menggunakan font bawaan sistem/yang sudah ada?',
-            ['Gunakan font bawaan/sudah ada', 'Install font baru dari Fontsource'],
+            'Apakah Anda ingin menginstall font baru dari Fontsource, atau menggunakan font bawaan project/sistem?',
+            ['Gunakan font bawaan project/sistem', 'Install font baru dari Fontsource'],
             0
         );
 
@@ -96,12 +96,17 @@ class InstallCommand extends Command
             $this->info("✨ Font yang akan diinstall: " . ucwords(str_replace('-', ' ', $this->selectedFont)) . " (@fontsource/{$this->selectedFont})\n");
         } else {
             $this->installFont = false;
-            $this->info('Masukkan nama font bawaan yang ingin digunakan (contoh: Arial, sans-serif, "Times New Roman").');
             
-            $fontInput = $this->ask('Nama font', 'Arial');
-            $this->selectedFont = trim($fontInput);
+            $detectedFont = 'Bawaan Sistem (Tailwind Default)';
+            $appCssPath = resource_path('css/app.css');
+            if (File::exists($appCssPath)) {
+                $cssContent = File::get($appCssPath);
+                if (preg_match('/--font-sans:\s*([^,;]+)/', $cssContent, $matches)) {
+                    $detectedFont = trim($matches[1], ' "\'');
+                }
+            }
             
-            $this->info("✨ Menggunakan font bawaan/sudah ada: {$this->selectedFont}\n");
+            $this->info("✨ Menggunakan font bawaan project: {$detectedFont}.\n");
         }
     }
 
@@ -331,23 +336,18 @@ PHP;
         $this->info('Configuring Tailwind CSS v4 in app.css...');
         $appCssPath = resource_path('css/app.css');
 
-        $fontFamily = ucwords(str_replace('-', ' ', $this->selectedFont));
+        $fontImports = "";
+        $fontTheme = "";
         
         if ($this->installFont) {
+            $fontFamily = ucwords(str_replace('-', ' ', $this->selectedFont));
             $fontImports = <<<CSS
 @import '@fontsource/{$this->selectedFont}/400.css';
 @import '@fontsource/{$this->selectedFont}/500.css';
 @import '@fontsource/{$this->selectedFont}/600.css';
 @import '@fontsource/{$this->selectedFont}/700.css';
 CSS;
-            $fontTheme = "--font-sans: '{$fontFamily}', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
-        } else {
-            $fontFamily = $this->selectedFont;
-            if (str_contains($fontFamily, ' ') && !str_contains($fontFamily, "'") && !str_contains($fontFamily, '"')) {
-                $fontFamily = "'{$fontFamily}'";
-            }
-            $fontImports = "";
-            $fontTheme = "--font-sans: {$fontFamily}, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
+            $fontTheme = "\n    --font-sans: '{$fontFamily}', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
         }
 
         $themeConfig = <<<CSS
@@ -355,9 +355,7 @@ CSS;
 
 {$fontImports}
 
-@theme {
-    {$fontTheme}
-
+@theme {{$fontTheme}
     --color-hijau: #56ab4f;
     --color-hijau-dark: #659e4b;
     --color-hijau-light: #7dc776;
@@ -386,9 +384,9 @@ CSS;
         if (File::exists($appCssPath)) {
             $cssContent = File::get($appCssPath);
 
+            // Bersihkan import tailwind lama agar tidak dobel, tapi JANGAN hapus @theme milik user
             $cssContent = str_replace('@import "tailwindcss";', '', $cssContent);
             $cssContent = str_replace("@import 'tailwindcss';", '', $cssContent);
-            $cssContent = preg_replace('/@theme\s*\{[^}]*\}/s', '', $cssContent);
 
             if (! str_contains($cssContent, '--color-hijau')) {
                 File::put($appCssPath, $themeConfig."\n\n".trim($cssContent));
