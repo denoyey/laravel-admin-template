@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.admin-nav')
 
 @php
     $title = 'File Upload Demo';
@@ -9,6 +9,10 @@
 @section('title', $title)
 @section('page-title', $pageTitle)
 @section('page-subtitle', $pageSubtitle)
+
+@section('nav-menu')
+    @include('pages.admin.file-upload-examples.partials.nav')
+@endsection
 
 @section('main-content')
 

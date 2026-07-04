@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FileUploadExampleController;
+use App\Http\Controllers\Admin\MultiUploadExampleController;
 use App\Http\Controllers\Admin\GlobalSearchController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
@@ -45,6 +46,10 @@ Route::prefix('/portal-admin')->name('admin.')->group(function () {
         Route::post('file-upload-examples/update-image/{id_image}', [FileUploadExampleController::class, 'updateImage'])->name('file-upload-examples.update-image');
         Route::delete('file-upload-examples/delete-image/{id_image}', [FileUploadExampleController::class, 'destroyImage'])->name('file-upload-examples.destroy-image');
         Route::resource('file-upload-examples', FileUploadExampleController::class);
+
+        // Multi Image Gallery
+        Route::delete('multi-upload-examples/bulk', [MultiUploadExampleController::class, 'destroyAll'])->name('multi-upload-examples.destroyAll');
+        Route::resource('multi-upload-examples', MultiUploadExampleController::class)->only(['index', 'store', 'update', 'destroy']);
 
         // Add your other admin routes here...
     });

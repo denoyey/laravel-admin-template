@@ -60,8 +60,17 @@ class InstallCommand extends Command
 
         $this->info("\n" . '✅ Laravel Admin Template installed successfully!');
         $this->info('🎉 Anda siap menggunakannya! Silakan jalankan:');
-        $this->warn('php artisan migrate');
-        $this->warn('php artisan db:seed --class=UserSeeder');
+        $this->warn('1. php artisan migrate:fresh');
+        $this->warn('2. php artisan db:seed --class=UserSeeder');
+        $this->warn('3. php artisan serve');
+        
+        $this->info("\n" . '🌐 URL Portal Admin:');
+        $this->warn('👉 http://127.0.0.1:8000/portal-admin/login');
+        
+        $this->info("\n" . '🔑 Akun Default (dari seeder):');
+        $this->warn('Email    : admin@admin.com');
+        $this->warn('Password : password');
+        $this->info("\n" . 'Selamat mengembangkan aplikasi! 🚀');
     }
 
     protected function promptForFont()
@@ -226,6 +235,8 @@ class InstallCommand extends Command
             'App\Http\Controllers\Admin\AccessManagement\UserController',
             'App\Http\Controllers\Admin\AccessManagement\ActivityLogController',
             'App\Http\Controllers\Auth\LoginController',
+            'App\Http\Controllers\Admin\FileUploadExampleController',
+            'App\Http\Controllers\Admin\MultiUploadExampleController',
         ];
 
         foreach ($controllers as $controller) {

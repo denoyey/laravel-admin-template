@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.admin-nav')
 
 @php
     $title = 'Tambah Data Upload';
@@ -10,6 +10,10 @@
 @section('page-title', $pageTitle)
 @section('page-subtitle', $pageSubtitle)
 
+@section('nav-menu')
+    @include('pages.admin.file-upload-examples.partials.nav')
+@endsection
+
 @section('main-content')
     <div class="mb-6">
         <div class="space-y-3">
@@ -17,7 +21,6 @@
                 ['label' => 'File Upload Demo', 'url' => route('admin.file-upload-examples.index')],
                 ['label' => 'Tambah'],
             ]" />
-            <h1 class="text-base sm:text-2xl font-bold text-gray-900">Tambah Data Baru</h1>
         </div>
     </div>
 

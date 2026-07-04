@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.admin-nav')
 
 @php
     $title = 'Edit Data Upload';
@@ -10,6 +10,10 @@
 @section('page-title', $pageTitle)
 @section('page-subtitle', $pageSubtitle)
 
+@section('nav-menu')
+    @include('pages.admin.file-upload-examples.partials.nav')
+@endsection
+
 @section('main-content')
     <div class="mb-6">
         <div class="space-y-3">
@@ -18,8 +22,6 @@
                 ['label' => Str::limit($fileUploadExample->judul, 20), 'url' => ''],
                 ['label' => 'Edit'],
             ]" />
-            <h1 class="text-base sm:text-2xl font-bold text-gray-900">Edit Data: <span
-                    class="text-hijau">{{ $fileUploadExample->judul }}</span></h1>
         </div>
     </div>
 
