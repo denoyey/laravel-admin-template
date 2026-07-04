@@ -22,8 +22,8 @@ class UpdateInfoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . auth()->id()],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . auth()->id()],
+            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . auth()->id() . ',id_users'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . auth()->id() . ',id_users'],
         ];
     }
 }
