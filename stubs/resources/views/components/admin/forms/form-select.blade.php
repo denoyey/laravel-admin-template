@@ -17,7 +17,7 @@
         @endif
     </label>
     <select name="{{ $name }}" id="{{ $name }}" {{ $required ? 'required' : '' }}
-        class="w-full text-[12px] sm:text-[13px] px-3 py-1.5 sm:py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-hijau/20 focus:border-hijau transition-all bg-white">
+        class="w-full text-gray-900 text-[12px] sm:text-[13px] px-3 py-1.5 sm:py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-hijau/20 focus:border-hijau transition-all bg-white">
         <option value="" disabled {{ empty(old($name, $value)) ? 'selected' : '' }}>{{ $placeholder }}</option>
         @foreach ($options as $optionValue => $optionLabel)
             <option value="{{ $optionValue }}" {{ old($name, $value) == $optionValue ? 'selected' : '' }}>

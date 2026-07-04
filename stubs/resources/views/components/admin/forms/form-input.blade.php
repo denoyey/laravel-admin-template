@@ -23,13 +23,13 @@
         @if ($type === 'textarea')
             <textarea name="{{ $name }}" id="{{ $name }}" rows="{{ $rows }}" {{ $required ? 'required' : '' }}
                 {{ $readonly ? 'readonly' : '' }}
-                class="w-full text-[12px] sm:text-[13px] px-3 py-1.5 sm:py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-hijau/20 focus:border-hijau transition-all placeholder:text-gray-400"
+                class="w-full text-gray-900 bg-white text-[12px] sm:text-[13px] px-3 py-1.5 sm:py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-hijau/20 focus:border-hijau transition-all placeholder:text-gray-400"
                 placeholder="{{ $placeholder }}">{{ old($name, $value) }}</textarea>
         @elseif($type === 'password')
             <input type="password" name="{{ $name }}" id="{{ $name }}" value="{{ old($name, $value) }}"
                 {{ $required ? 'required' : '' }} {{ $readonly ? 'readonly' : '' }}
                 autocomplete="{{ $autocomplete }}"
-                class="w-full text-[12px] sm:text-[13px] px-3 py-1.5 sm:py-2 pr-10 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-hijau/20 focus:border-hijau transition-all placeholder:text-gray-400"
+                class="w-full text-gray-900 bg-white text-[12px] sm:text-[13px] px-3 py-1.5 sm:py-2 pr-10 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-hijau/20 focus:border-hijau transition-all placeholder:text-gray-400"
                 placeholder="{{ $placeholder }}">
             <button type="button"
                 class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
@@ -65,7 +65,7 @@
             <input type="{{ $type }}" name="{{ $name }}" id="{{ $name }}"
                 value="{{ old($name, $value) }}" {{ $required ? 'required' : '' }} {{ $readonly ? 'readonly' : '' }}
                 autocomplete="{{ $autocomplete }}"
-                class="w-full text-[12px] sm:text-[13px] px-3 py-1.5 sm:py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-hijau/20 focus:border-hijau transition-all placeholder:text-gray-400"
+                class="w-full text-gray-900 bg-white text-[12px] sm:text-[13px] px-3 py-1.5 sm:py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-hijau/20 focus:border-hijau transition-all placeholder:text-gray-400"
                 placeholder="{{ $placeholder }}">
         @endif
     </div>

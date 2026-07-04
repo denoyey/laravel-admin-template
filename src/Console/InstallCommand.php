@@ -73,21 +73,35 @@ class InstallCommand extends Command
         $this->info("\n" . 'Selamat mengembangkan aplikasi! 🚀');
     }
 
+    protected $installFont = false;
+
     protected function promptForFont()
     {
         $this->info("\n" . '🎨 Konfigurasi Font Dashboard (Tailwind CSS v4)');
-        $this->info('Silakan lihat daftar font yang tersedia di: https://fontsource.org/fonts');
-        $this->info('Masukkan nama package font dalam format kebab-case. Contoh: inter, roboto, open-sans, poppins.');
         
-        $fontInput = $this->ask('Kosongkan atau ketik "arial" untuk menggunakan font Arial (bawaan sistem)', 'arial');
-        $fontInput = strtolower(trim($fontInput));
-        
-        $this->selectedFont = empty($fontInput) ? 'arial' : $fontInput;
-        
-        if ($this->selectedFont !== 'arial') {
-            $this->info("✨ Font yang dipilih: " . ucwords(str_replace('-', ' ', $this->selectedFont)) . " (@fontsource/{$this->selectedFont})\n");
+        $choice = $this->choice(
+            'Apakah Anda ingin menginstall font baru dari Fontsource, atau menggunakan font bawaan sistem/yang sudah ada?',
+            ['Gunakan font bawaan/sudah ada', 'Install font baru dari Fontsource'],
+            0
+        );
+
+        if ($choice === 'Install font baru dari Fontsource') {
+            $this->installFont = true;
+            $this->info('Silakan lihat daftar font yang tersedia di: https://fontsource.org/fonts');
+            $this->info('Masukkan nama package font dalam format kebab-case. Contoh: inter, roboto, open-sans, poppins.');
+            
+            $fontInput = $this->ask('Nama font', 'inter');
+            $this->selectedFont = strtolower(trim($fontInput));
+            
+            $this->info("✨ Font yang akan diinstall: " . ucwords(str_replace('-', ' ', $this->selectedFont)) . " (@fontsource/{$this->selectedFont})\n");
         } else {
-            $this->info("✨ Menggunakan font bawaan sistem: Arial\n");
+            $this->installFont = false;
+            $this->info('Masukkan nama font bawaan yang ingin digunakan (contoh: Arial, sans-serif, "Times New Roman").');
+            
+            $fontInput = $this->ask('Nama font', 'Arial');
+            $this->selectedFont = trim($fontInput);
+            
+            $this->info("✨ Menggunakan font bawaan/sudah ada: {$this->selectedFont}\n");
         }
     }
 
@@ -138,22 +152,15 @@ class InstallCommand extends Command
 
     protected function isProtectedFile($stubRelativePath, $targetPath)
     {
-        if (! array_key_exists($stubRelativePath, $this->protectedFiles)) {
-            return false;
-        }
-
         if (File::exists($targetPath)) {
             return true;
         }
 
-        $rule = $this->protectedFiles[$stubRelativePath];
-        
-        if (is_array($rule)) {
-            return $this->scanForSignature($rule['dir'], $rule['ext'], $rule['signatures'], $rule['message']);
-        }
-
-        if (is_string($rule) && method_exists($this, $rule)) {
-            return $this->$rule($targetPath);
+        if (array_key_exists($stubRelativePath, $this->protectedFiles)) {
+            $rule = $this->protectedFiles[$stubRelativePath];
+            if (is_array($rule)) {
+                $this->scanForSignature($rule['dir'], $rule['ext'], $rule['signatures'], $rule['message']);
+            }
         }
 
         return false;
@@ -181,7 +188,7 @@ class InstallCommand extends Command
             }
 
             if ($hasAllSignatures) {
-                $this->warn("Found existing {$message} in: " . $file->getRelativePathname());
+                $this->warn("⚠️ Perhatian: Logika serupa untuk {$message} ditemukan di: " . $file->getRelativePathname() . ". Anda mungkin memiliki duplikasi fitur.");
                 return true;
             }
         }
@@ -249,7 +256,7 @@ class InstallCommand extends Command
             $currentRoutes = preg_replace('/(<\?php\s*)/', "$1\n".$useStatements, $currentRoutes, 1);
         }
 
-        if (! str_contains($currentRoutes, "Route::prefix('/portal-admin')")) {
+        if (! str_contains($currentRoutes, '// Admin Portal Routes')) {
             $routesStub = File::get(__DIR__.'/../../stubs/routes/web-admin-stub.php');
 
             $routeContent = strstr($routesStub, '// Admin Portal Routes');
@@ -307,10 +314,14 @@ PHP;
         });
 PHP;
 
-                $content = preg_replace('/(withMiddleware\(function\s*\(Middleware\s*\$middleware\)(?:\s*:\s*void)?\s*\{)/', "$1\n".$aliasConfig, $content);
-                $content = preg_replace('/(withExceptions\(function\s*\(Exceptions\s*\$exceptions\)(?:\s*:\s*void)?\s*\{)/', "$1\n".$exceptionsConfig, $content);
+                $newContent = preg_replace('/(withMiddleware\(function\s*\(Middleware\s*\$middleware\)(?:\s*:\s*void)?\s*\{)/', "$1\n".$aliasConfig, $content);
+                $newContent = preg_replace('/(withExceptions\(function\s*\(Exceptions\s*\$exceptions\)(?:\s*:\s*void)?\s*\{)/', "$1\n".$exceptionsConfig, $newContent);
 
-                File::put($appPath, $content);
+                if ($newContent === $content) {
+                    $this->warn("⚠️ Perhatian: Gagal menyuntikkan middleware otomatis ke bootstrap/app.php karena format tidak sesuai. Silakan tambahkan alias middleware dan exception handler secara manual.");
+                }
+                
+                File::put($appPath, $newContent);
             }
         }
     }
@@ -322,7 +333,7 @@ PHP;
 
         $fontFamily = ucwords(str_replace('-', ' ', $this->selectedFont));
         
-        if ($this->selectedFont !== 'arial') {
+        if ($this->installFont) {
             $fontImports = <<<CSS
 @import '@fontsource/{$this->selectedFont}/400.css';
 @import '@fontsource/{$this->selectedFont}/500.css';
@@ -331,8 +342,12 @@ PHP;
 CSS;
             $fontTheme = "--font-sans: '{$fontFamily}', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
         } else {
+            $fontFamily = $this->selectedFont;
+            if (str_contains($fontFamily, ' ') && !str_contains($fontFamily, "'") && !str_contains($fontFamily, '"')) {
+                $fontFamily = "'{$fontFamily}'";
+            }
             $fontImports = "";
-            $fontTheme = "--font-sans: Arial, Helvetica, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
+            $fontTheme = "--font-sans: {$fontFamily}, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
         }
 
         $themeConfig = <<<CSS
@@ -357,6 +372,15 @@ CSS;
 @source '../**/*.js';
 
 @import './components/loading.css';
+
+/* Fix Browser Autofill White Text Issue in Dark Mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: #111827 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
 CSS;
 
         if (File::exists($appCssPath)) {
@@ -442,7 +466,7 @@ ENV;
             'cropperjs' => '^1.6.2',
         ];
 
-        if ($this->selectedFont !== 'arial') {
+        if ($this->installFont) {
             $newDependencies["@fontsource/{$this->selectedFont}"] = '^5.0.0';
         }
 
@@ -455,9 +479,13 @@ ENV;
     {
         $this->info('Installing Security, Logs & Image Packages...');
 
-        Process::forever()->run('composer require spatie/laravel-permission intervention/image spatie/laravel-activitylog livewire/livewire', function (string $type, string $output) {
+        $composer = Process::forever()->run('composer require spatie/laravel-permission intervention/image spatie/laravel-activitylog livewire/livewire', function (string $type, string $output) {
             $this->output->write($output);
         });
+        
+        if ($composer->failed()) {
+            $this->error("\n❌ Gagal menginstall package Composer. Silakan jalankan perintah berikut secara manual:\ncomposer require spatie/laravel-permission intervention/image spatie/laravel-activitylog livewire/livewire");
+        }
 
         Process::run('php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"');
         Process::run('php artisan vendor:publish --provider="Spatie\Activitylog\ActivitylogServiceProvider" --tag="activitylog-migrations"');
@@ -493,12 +521,20 @@ ENV;
     {
         $this->info('Installing NPM Dependencies & Building Assets (Please wait)...');
 
-        Process::forever()->run('npm install', function (string $type, string $output) {
+        $npmInstall = Process::forever()->run('npm install', function (string $type, string $output) {
             $this->output->write($output);
         });
+        
+        if ($npmInstall->failed()) {
+            $this->error("\n❌ Gagal menjalankan 'npm install'. Silakan jalankan manual.");
+        }
 
-        Process::forever()->run('npm run build', function (string $type, string $output) {
+        $npmBuild = Process::forever()->run('npm run build', function (string $type, string $output) {
             $this->output->write($output);
         });
+        
+        if ($npmBuild->failed()) {
+            $this->error("\n❌ Gagal menjalankan 'npm run build'. Silakan jalankan manual.");
+        }
     }
 }
