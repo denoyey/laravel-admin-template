@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FileUploadExampleController;
 use App\Http\Controllers\Admin\GlobalSearchController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
@@ -37,6 +38,13 @@ Route::prefix('/portal-admin')->name('admin.')->group(function () {
 
         Route::delete('activity-logs/bulk', [ActivityLogController::class, 'bulkDelete'])->name('activity-logs.bulk-delete');
         Route::resource('activity-logs', ActivityLogController::class)->only(['index', 'show', 'destroy']);
+
+        // File Upload Demo
+        Route::delete('file-upload-examples/bulk', [FileUploadExampleController::class, 'bulkDelete'])->name('file-upload-examples.bulk-delete');
+        Route::delete('file-upload-examples/delete-all-images/{id_file_upload}', [FileUploadExampleController::class, 'destroyAllImages'])->name('file-upload-examples.destroy-all-images');
+        Route::post('file-upload-examples/update-image/{id_image}', [FileUploadExampleController::class, 'updateImage'])->name('file-upload-examples.update-image');
+        Route::delete('file-upload-examples/delete-image/{id_image}', [FileUploadExampleController::class, 'destroyImage'])->name('file-upload-examples.destroy-image');
+        Route::resource('file-upload-examples', FileUploadExampleController::class);
 
         // Add your other admin routes here...
     });

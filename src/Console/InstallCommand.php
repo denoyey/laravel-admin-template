@@ -12,9 +12,40 @@ class InstallCommand extends Command
 
     protected $description = 'Install the Laravel Admin Template and Auth Starter Kit';
 
+    protected $protectedFiles = [
+        'resources/js/admin/features/image-protect.js' => [
+            'dir' => 'resources/js',
+            'ext' => 'js',
+            'signatures' => ['contextmenu', 'draggable', 'preventDefault'],
+            'message' => 'image protection logic',
+        ],
+        'app/Http/Middleware/PreventSpamSubmit.php' => [
+            'dir' => 'app/Http/Middleware',
+            'ext' => 'php',
+            'signatures' => ['spam_lock_', 'COOLDOWN_SECONDS', 'Cache::has'],
+            'message' => 'Spam/Rate-limiting protection middleware',
+        ],
+        'app/Http/Middleware/IdleTimeoutMiddleware.php' => [
+            'dir' => 'app/Http/Middleware',
+            'ext' => 'php',
+            'signatures' => ['idle_timeout_enabled', 'last_activity_time'],
+            'message' => 'Idle Timeout middleware',
+        ],
+        'resources/js/admin/features/global-search.js' => [
+            'dir' => 'resources/js',
+            'ext' => 'js',
+            'signatures' => ['Ctrl', 'KeyK', 'fetch'],
+            'message' => 'Global Search (Ctrl+K) logic',
+        ],
+    ];
+
+    protected $selectedFont = 'arial';
+
     public function handle()
     {
-        $this->info('🚀 Installing Laravel Admin Template by denoyey...');
+        $this->info("\n" . '🚀 Installing Laravel Admin Template by denoyey...');
+
+        $this->promptForFont();
 
         $this->publishFiles();
         $this->updateRoutes();
@@ -27,10 +58,28 @@ class InstallCommand extends Command
         $this->updatePermissionConfig();
         $this->buildNodePackages();
 
-        $this->info('✅ Laravel Admin Template installed successfully!');
+        $this->info("\n" . '✅ Laravel Admin Template installed successfully!');
         $this->info('🎉 Anda siap menggunakannya! Silakan jalankan:');
         $this->warn('php artisan migrate');
         $this->warn('php artisan db:seed --class=UserSeeder');
+    }
+
+    protected function promptForFont()
+    {
+        $this->info("\n" . '🎨 Konfigurasi Font Dashboard (Tailwind CSS v4)');
+        $this->info('Silakan lihat daftar font yang tersedia di: https://fontsource.org/fonts');
+        $this->info('Masukkan nama package font dalam format kebab-case. Contoh: inter, roboto, open-sans, poppins.');
+        
+        $fontInput = $this->ask('Kosongkan atau ketik "arial" untuk menggunakan font Arial (bawaan sistem)', 'arial');
+        $fontInput = strtolower(trim($fontInput));
+        
+        $this->selectedFont = empty($fontInput) ? 'arial' : $fontInput;
+        
+        if ($this->selectedFont !== 'arial') {
+            $this->info("✨ Font yang dipilih: " . ucwords(str_replace('-', ' ', $this->selectedFont)) . " (@fontsource/{$this->selectedFont})\n");
+        } else {
+            $this->info("✨ Menggunakan font bawaan sistem: Arial\n");
+        }
     }
 
     protected function publishFiles()
@@ -66,17 +115,99 @@ class InstallCommand extends Command
             $source = __DIR__.'/../../stubs/'.$from;
             if (File::exists($source)) {
                 if (File::isDirectory($source)) {
-                    File::copyDirectory($source, $to);
+                    $this->copyDirectorySafe($source, $to, $from);
                 } else {
-                    File::ensureDirectoryExists(dirname($to));
-                    File::copy($source, $to);
+                    $this->copyFileSafe($source, $to, $from);
                 }
             }
         }
 
         if (File::exists(__DIR__.'/../../stubs/resources/js/admin.js')) {
-            File::copy(__DIR__.'/../../stubs/resources/js/admin.js', resource_path('js/admin.js'));
+            $this->copyFileSafe(__DIR__.'/../../stubs/resources/js/admin.js', resource_path('js/admin.js'), 'resources/js/admin.js');
         }
+    }
+
+    protected function isProtectedFile($stubRelativePath, $targetPath)
+    {
+        if (! array_key_exists($stubRelativePath, $this->protectedFiles)) {
+            return false;
+        }
+
+        if (File::exists($targetPath)) {
+            return true;
+        }
+
+        $rule = $this->protectedFiles[$stubRelativePath];
+        
+        if (is_array($rule)) {
+            return $this->scanForSignature($rule['dir'], $rule['ext'], $rule['signatures'], $rule['message']);
+        }
+
+        if (is_string($rule) && method_exists($this, $rule)) {
+            return $this->$rule($targetPath);
+        }
+
+        return false;
+    }
+
+    protected function scanForSignature($dir, $ext, $signatures, $message)
+    {
+        $searchDir = base_path($dir);
+        
+        if (! File::isDirectory($searchDir)) {
+            return false;
+        }
+
+        foreach (File::allFiles($searchDir) as $file) {
+            if ($file->getExtension() !== $ext) continue;
+            
+            $content = file_get_contents($file->getPathname());
+            $hasAllSignatures = true;
+            
+            foreach ($signatures as $sig) {
+                if (! str_contains($content, $sig)) {
+                    $hasAllSignatures = false;
+                    break;
+                }
+            }
+
+            if ($hasAllSignatures) {
+                $this->warn("Found existing {$message} in: " . $file->getRelativePathname());
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function copyDirectorySafe($source, $to, $baseFrom)
+    {
+        File::ensureDirectoryExists($to);
+
+        foreach (File::allFiles($source) as $file) {
+            $relativePath = $file->getRelativePathname();
+            $targetPath = $to . '/' . $relativePath;
+            $stubRelativePath = $baseFrom . '/' . $relativePath;
+
+            if ($this->isProtectedFile($stubRelativePath, $targetPath)) {
+                $this->warn("Skipping protected file: {$stubRelativePath}");
+                continue;
+            }
+
+            File::ensureDirectoryExists(dirname($targetPath));
+            File::copy($file->getPathname(), $targetPath);
+        }
+    }
+
+    protected function copyFileSafe($source, $to, $stubRelativePath)
+    {
+        if ($this->isProtectedFile($stubRelativePath, $to)) {
+            $this->warn("Skipping protected file: {$stubRelativePath}");
+            return;
+        }
+
+        File::ensureDirectoryExists(dirname($to));
+        File::copy($source, $to);
     }
 
     protected function updateRoutes()
@@ -178,17 +309,28 @@ PHP;
         $this->info('Configuring Tailwind CSS v4 in app.css...');
         $appCssPath = resource_path('css/app.css');
 
-        $themeConfig = <<<'CSS'
+        $fontFamily = ucwords(str_replace('-', ' ', $this->selectedFont));
+        
+        if ($this->selectedFont !== 'arial') {
+            $fontImports = <<<CSS
+@import '@fontsource/{$this->selectedFont}/400.css';
+@import '@fontsource/{$this->selectedFont}/500.css';
+@import '@fontsource/{$this->selectedFont}/600.css';
+@import '@fontsource/{$this->selectedFont}/700.css';
+CSS;
+            $fontTheme = "--font-sans: '{$fontFamily}', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
+        } else {
+            $fontImports = "";
+            $fontTheme = "--font-sans: Arial, Helvetica, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
+        }
+
+        $themeConfig = <<<CSS
 @import 'tailwindcss';
 
-@import '@fontsource/inter/400.css';
-@import '@fontsource/inter/500.css';
-@import '@fontsource/inter/600.css';
-@import '@fontsource/inter/700.css';
+{$fontImports}
 
 @theme {
-    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    {$fontTheme}
 
     --color-hijau: #56ab4f;
     --color-hijau-dark: #659e4b;
@@ -287,8 +429,11 @@ ENV;
             'gsap' => '^3.15.0',
             'swiper' => '^12.1.4',
             'cropperjs' => '^1.6.2',
-            '@fontsource/inter' => '^5.0.0',
         ];
+
+        if ($this->selectedFont !== 'arial') {
+            $newDependencies["@fontsource/{$this->selectedFont}"] = '^5.0.0';
+        }
 
         $packages['dependencies'] = array_merge($packages['dependencies'] ?? [], $newDependencies);
         ksort($packages['dependencies']);
