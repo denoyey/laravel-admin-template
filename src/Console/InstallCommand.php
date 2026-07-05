@@ -335,10 +335,14 @@ PHP;
     {
         $this->info('Configuring Tailwind CSS v4 in app.css...');
         $appCssPath = resource_path('css/app.css');
+        $cssContent = File::exists($appCssPath) ? File::get($appCssPath) : '';
 
-        $fontImports = "";
-        $fontTheme = "";
-        
+        // 1. Ensure @import 'tailwindcss' is exactly once at the top
+        $cssContent = str_replace('@import "tailwindcss";', '', $cssContent);
+        $cssContent = str_replace("@import 'tailwindcss';", '', $cssContent);
+        $cssContent = "@import 'tailwindcss';\n\n" . trim($cssContent);
+
+        // 2. Add Font imports if installing
         if ($this->installFont) {
             $fontFamily = ucwords(str_replace('-', ' ', $this->selectedFont));
             $fontImports = <<<CSS
@@ -347,30 +351,68 @@ PHP;
 @import '@fontsource/{$this->selectedFont}/600.css';
 @import '@fontsource/{$this->selectedFont}/700.css';
 CSS;
-            $fontTheme = "\n    --font-sans: '{$fontFamily}', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
+            if (!str_contains($cssContent, "@import '@fontsource/{$this->selectedFont}")) {
+                $cssContent = preg_replace("/@import 'tailwindcss';\n\n/", "@import 'tailwindcss';\n\n{$fontImports}\n\n", $cssContent, 1);
+            }
         }
 
-        $themeConfig = <<<CSS
-@import 'tailwindcss';
-
-{$fontImports}
-
-@theme {{$fontTheme}
+        // 3. Inject @theme variables smartly
+        $themeInjections = [];
+        if ($this->installFont) {
+            $fontTheme = "    --font-sans: '{$fontFamily}', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
+            if (!str_contains($cssContent, "--font-sans: '{$fontFamily}'")) {
+                $themeInjections[] = $fontTheme;
+            }
+        }
+        
+        $adminColors = <<<CSS
     --color-hijau: #56ab4f;
     --color-hijau-dark: #659e4b;
     --color-hijau-light: #7dc776;
     --color-oren: #f1ac0b;
     --color-oren-dark: #d99800;
     --color-grey: #b3b3b3;
-}
+CSS;
+        if (!str_contains($cssContent, '--color-hijau')) {
+            $themeInjections[] = $adminColors;
+        }
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+        if (!empty($themeInjections)) {
+            $injectionsStr = implode("\n", $themeInjections);
+            if (preg_match('/@theme\s*\{/', $cssContent)) {
+                // Inject right inside existing @theme block
+                $cssContent = preg_replace('/(@theme\s*\{)/', "$1\n{$injectionsStr}", $cssContent, 1);
+            } else {
+                // Create new @theme block if none exists
+                $cssContent .= "\n\n@theme {\n{$injectionsStr}\n}";
+            }
+        }
 
-@import './components/loading.css';
+        // 4. Inject @source tags
+        $sources = [
+            "@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';",
+            "@source '../../storage/framework/views/*.php';",
+            "@source '../**/*.blade.php';",
+            "@source '../**/*.js';"
+        ];
+        $sourceInjections = [];
+        foreach ($sources as $source) {
+            if (!str_contains($cssContent, str_replace("'", '"', $source)) && !str_contains($cssContent, $source)) {
+                $sourceInjections[] = $source;
+            }
+        }
+        if (!empty($sourceInjections)) {
+            $cssContent .= "\n\n" . implode("\n", $sourceInjections);
+        }
 
+        // 5. Inject loading.css
+        $loadingImport = "@import './components/loading.css';";
+        if (!str_contains($cssContent, $loadingImport)) {
+            $cssContent .= "\n\n" . $loadingImport;
+        }
+
+        // 6. Inject Autofill Fix
+        $autofillFix = <<<CSS
 /* Fix Browser Autofill White Text Issue in Dark Mode */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -380,20 +422,11 @@ input:-webkit-autofill:active {
     transition: background-color 5000s ease-in-out 0s;
 }
 CSS;
-
-        if (File::exists($appCssPath)) {
-            $cssContent = File::get($appCssPath);
-
-            // Bersihkan import tailwind lama agar tidak dobel, tapi JANGAN hapus @theme milik user
-            $cssContent = str_replace('@import "tailwindcss";', '', $cssContent);
-            $cssContent = str_replace("@import 'tailwindcss';", '', $cssContent);
-
-            if (! str_contains($cssContent, '--color-hijau')) {
-                File::put($appCssPath, $themeConfig."\n\n".trim($cssContent));
-            }
-        } else {
-            File::put($appCssPath, $themeConfig);
+        if (!str_contains($cssContent, 'input:-webkit-autofill')) {
+            $cssContent .= "\n\n" . $autofillFix;
         }
+
+        File::put($appCssPath, trim($cssContent) . "\n");
     }
 
     protected function updateSessionConfig()
@@ -420,26 +453,31 @@ PHP;
     protected function updateEnvironmentFile()
     {
         $this->info('Updating environment variables...');
-        $envVars = <<<'ENV'
-
-# Auto Logout (Idle Timeout)
-IDLE_TIMEOUT_ENABLED=true
-IDLE_TIMEOUT_MINUTES=5
-
-# Google reCAPTCHA v2 (TEST KEY)
-RECAPTCHA_SITE_KEY=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
-RECAPTCHA_SECRET_KEY=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
-
-# Activity Log
-ACTIVITY_LOG_RETENTION_DAYS=7
-ENV;
+        $envVars = [
+            'IDLE_TIMEOUT_ENABLED' => 'true',
+            'IDLE_TIMEOUT_MINUTES' => '5',
+            'RECAPTCHA_SITE_KEY' => '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
+            'RECAPTCHA_SECRET_KEY' => '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe',
+            'ACTIVITY_LOG_RETENTION_DAYS' => '7',
+        ];
 
         foreach (['.env', '.env.example'] as $file) {
             $path = base_path($file);
             if (File::exists($path)) {
                 $content = File::get($path);
-                if (! str_contains($content, 'RECAPTCHA_SITE_KEY')) {
-                    File::append($path, $envVars."\n");
+                $appendStr = "\n";
+                $needsAppend = false;
+                
+                foreach ($envVars as $key => $value) {
+                    // Cek apakah key sudah ada di file env (termasuk jika di-comment)
+                    if (!preg_match("/^#?\s*{$key}=/m", $content)) {
+                        $appendStr .= "{$key}={$value}\n";
+                        $needsAppend = true;
+                    }
+                }
+
+                if ($needsAppend) {
+                    File::append($path, $appendStr);
                 }
             }
         }
