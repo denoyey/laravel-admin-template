@@ -508,16 +508,16 @@ PHP;
 
         $columnsToInject = [];
         
-        if (!str_contains($content, "\$table->string('username')")) {
+        if (!preg_match("/(['\"]username['\"])/", $content)) {
             $columnsToInject[] = "            \$table->string('username')->nullable();";
         }
-        if (!str_contains($content, "\$table->string('role')")) {
+        if (!preg_match("/(['\"]role['\"])/", $content)) {
             $columnsToInject[] = "            \$table->string('role')->nullable();";
         }
-        if (!str_contains($content, "\$table->string('avatar')")) {
+        if (!preg_match("/(['\"]avatar['\"])/", $content)) {
             $columnsToInject[] = "            \$table->string('avatar')->nullable();";
         }
-        if (!str_contains($content, "\$table->boolean('is_active')")) {
+        if (!preg_match("/(['\"]is_active['\"])/", $content)) {
             $columnsToInject[] = "            \$table->boolean('is_active')->default(true);";
         }
 
