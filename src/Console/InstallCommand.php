@@ -55,7 +55,9 @@ class InstallCommand extends Command
         $this->updateSessionConfig();
         $this->updateEnvironmentFile();
         $this->updateUserModel();
+        $this->updateUserFactory();
         $this->updateUsersMigration();
+        $this->updateDatabaseSeeder();
         $this->requireComposerPackages();
         $this->updatePermissionConfig();
         $this->buildNodePackages();
@@ -490,6 +492,43 @@ PHP;
             }
 
             File::put($userModelPath, $content);
+        }
+    }
+
+    protected function updateUserFactory()
+    {
+        $this->info('Updating UserFactory...');
+        $factoryPath = database_path('factories/UserFactory.php');
+
+        if (File::exists($factoryPath)) {
+            $content = File::get($factoryPath);
+            if (str_contains($content, "'name' => fake()->name(),")) {
+                $content = str_replace("'name' => fake()->name(),", "'username' => fake()->name(),", $content);
+                File::put($factoryPath, $content);
+            }
+        }
+    }
+
+    protected function updateDatabaseSeeder()
+    {
+        $this->info('Updating DatabaseSeeder...');
+        $seederPath = database_path('seeders/DatabaseSeeder.php');
+
+        if (File::exists($seederPath)) {
+            $content = File::get($seederPath);
+            
+            if (!str_contains($content, 'UserSeeder::class')) {
+                $newRunMethod = <<<PHP
+    public function run(): void
+    {
+        \$this->call([
+            UserSeeder::class,
+        ]);
+    }
+PHP;
+                $content = preg_replace('/public function run\(\).*?\{.*?\}/s', $newRunMethod, $content);
+                File::put($seederPath, $content);
+            }
         }
     }
 
