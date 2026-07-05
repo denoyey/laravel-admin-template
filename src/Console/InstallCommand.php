@@ -424,6 +424,12 @@ input:-webkit-autofill:active {
 CSS;
         if (!str_contains($cssContent, 'input:-webkit-autofill')) {
             $cssContent .= "\n\n" . $autofillFix;
+        } else {
+            $cssContent = preg_replace(
+                '/-webkit-text-fill-color:\s*white\s*!important;/',
+                '-webkit-text-fill-color: #111827 !important;',
+                $cssContent
+            );
         }
 
         File::put($appCssPath, trim($cssContent) . "\n");
