@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Process;
 
 class InstallCommand extends Command
 {
-    protected $signature = 'denoyey:install';
+    protected $signature = 'denoyey:install {--force : Overwrite existing files}';
 
     protected $description = 'Install the Laravel Admin Template and Auth Starter Kit';
 
@@ -159,8 +159,8 @@ class InstallCommand extends Command
 
     protected function isProtectedFile($stubRelativePath, $targetPath)
     {
-        if (File::exists($targetPath)) {
-            return true;
+        if (! File::exists($targetPath)) {
+            return false;
         }
 
         if (array_key_exists($stubRelativePath, $this->protectedFiles)) {
@@ -168,9 +168,14 @@ class InstallCommand extends Command
             if (is_array($rule)) {
                 $this->scanForSignature($rule['dir'], $rule['ext'], $rule['signatures'], $rule['message']);
             }
+            return true;
         }
 
-        return false;
+        if ($this->option('force')) {
+            return false;
+        }
+
+        return true;
     }
 
     protected function scanForSignature($dir, $ext, $signatures, $message)
