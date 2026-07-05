@@ -54,6 +54,7 @@ class InstallCommand extends Command
         $this->updatePackageJson();
         $this->updateSessionConfig();
         $this->updateEnvironmentFile();
+        $this->updateUserModel();
         $this->requireComposerPackages();
         $this->updatePermissionConfig();
         $this->buildNodePackages();
@@ -337,26 +338,36 @@ PHP;
         $appCssPath = resource_path('css/app.css');
         $cssContent = File::exists($appCssPath) ? File::get($appCssPath) : '';
 
-        // 1. Ensure @import 'tailwindcss' is exactly once at the top
+        // --- 1. IMPORTS (Always at the top) ---
+        // Clean up existing known imports to move them to the top
         $cssContent = str_replace('@import "tailwindcss";', '', $cssContent);
         $cssContent = str_replace("@import 'tailwindcss';", '', $cssContent);
-        $cssContent = "@import 'tailwindcss';\n\n" . trim($cssContent);
+        $cssContent = str_replace("@import './components/loading.css';", '', $cssContent);
+        $cssContent = str_replace("/* --- Admin Template Imports --- */\n", '', $cssContent);
 
-        // 2. Add Font imports if installing
+        $topImports = [
+            "@import 'tailwindcss';",
+            "/* --- Admin Template Imports --- */",
+        ];
+
         if ($this->installFont) {
             $fontFamily = ucwords(str_replace('-', ' ', $this->selectedFont));
-            $fontImports = <<<CSS
-@import '@fontsource/{$this->selectedFont}/400.css';
-@import '@fontsource/{$this->selectedFont}/500.css';
-@import '@fontsource/{$this->selectedFont}/600.css';
-@import '@fontsource/{$this->selectedFont}/700.css';
-CSS;
-            if (!str_contains($cssContent, "@import '@fontsource/{$this->selectedFont}")) {
-                $cssContent = preg_replace("/@import 'tailwindcss';\n\n/", "@import 'tailwindcss';\n\n{$fontImports}\n\n", $cssContent, 1);
-            }
+            $topImports[] = "@import '@fontsource/{$this->selectedFont}/400.css';";
+            $topImports[] = "@import '@fontsource/{$this->selectedFont}/500.css';";
+            $topImports[] = "@import '@fontsource/{$this->selectedFont}/600.css';";
+            $topImports[] = "@import '@fontsource/{$this->selectedFont}/700.css';";
+            
+            // Clean up old fontsource imports from anywhere else in the file
+            $cssContent = str_replace("@import '@fontsource/{$this->selectedFont}/400.css';", '', $cssContent);
+            $cssContent = str_replace("@import '@fontsource/{$this->selectedFont}/500.css';", '', $cssContent);
+            $cssContent = str_replace("@import '@fontsource/{$this->selectedFont}/600.css';", '', $cssContent);
+            $cssContent = str_replace("@import '@fontsource/{$this->selectedFont}/700.css';", '', $cssContent);
         }
 
-        // 3. Inject @theme variables smartly
+        $topImports[] = "@import './components/loading.css';";
+        $cssContent = implode("\n", $topImports) . "\n\n" . trim($cssContent);
+
+        // --- 2. THEME VARIABLES ---
         $themeInjections = [];
         if ($this->installFont) {
             $fontTheme = "    --font-sans: '{$fontFamily}', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';";
@@ -366,6 +377,7 @@ CSS;
         }
         
         $adminColors = <<<CSS
+    /* Admin Template Colors */
     --color-hijau: #56ab4f;
     --color-hijau-dark: #659e4b;
     --color-hijau-light: #7dc776;
@@ -380,15 +392,13 @@ CSS;
         if (!empty($themeInjections)) {
             $injectionsStr = implode("\n", $themeInjections);
             if (preg_match('/@theme\s*\{/', $cssContent)) {
-                // Inject right inside existing @theme block
                 $cssContent = preg_replace('/(@theme\s*\{)/', "$1\n{$injectionsStr}", $cssContent, 1);
             } else {
-                // Create new @theme block if none exists
                 $cssContent .= "\n\n@theme {\n{$injectionsStr}\n}";
             }
         }
 
-        // 4. Inject @source tags
+        // --- 3. SOURCES ---
         $sources = [
             "@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';",
             "@source '../../storage/framework/views/*.php';",
@@ -402,18 +412,13 @@ CSS;
             }
         }
         if (!empty($sourceInjections)) {
+            array_unshift($sourceInjections, "/* --- Admin Template Sources --- */");
             $cssContent .= "\n\n" . implode("\n", $sourceInjections);
         }
 
-        // 5. Inject loading.css
-        $loadingImport = "@import './components/loading.css';";
-        if (!str_contains($cssContent, $loadingImport)) {
-            $cssContent .= "\n\n" . $loadingImport;
-        }
-
-        // 6. Inject Autofill Fix
+        // --- 4. AUTOFILL FIX ---
         $autofillFix = <<<CSS
-/* Fix Browser Autofill White Text Issue in Dark Mode */
+/* --- Admin Template Fix: Browser Autofill White Text Issue in Dark Mode --- */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -453,6 +458,33 @@ PHP;
                 $content = preg_replace('/\];\s*$/', $idleConfig, $content);
                 File::put($sessionConfigPath, $content);
             }
+        }
+    }
+
+    protected function updateUserModel()
+    {
+        $this->info('Updating User model...');
+        $userModelPath = app_path('Models/User.php');
+
+        if (File::exists($userModelPath)) {
+            $content = File::get($userModelPath);
+
+            $namespaceImport = 'use Spatie\Permission\Traits\HasRoles;';
+            if (!str_contains($content, $namespaceImport)) {
+                $content = preg_replace('/(use Illuminate\\\Notifications\\\Notifiable;)/', "$1\n{$namespaceImport}", $content);
+            }
+
+            if (str_contains($content, 'use HasFactory, Notifiable;') && !str_contains($content, 'use HasFactory, Notifiable, HasRoles;')) {
+                $content = str_replace('use HasFactory, Notifiable;', 'use HasFactory, Notifiable, HasRoles;', $content);
+            } elseif (!str_contains($content, 'use HasRoles;') && !str_contains($content, 'use HasFactory, Notifiable, HasRoles;')) {
+                $content = preg_replace('/(class User extends Authenticatable\s*\{)/', "$1\n    use HasRoles;\n", $content);
+            }
+
+            if (str_contains($content, "'name',") && !str_contains($content, "'username',")) {
+                $content = str_replace("'name',", "'name',\n        'username',\n        'role',\n        'avatar',\n        'is_active',", $content);
+            }
+
+            File::put($userModelPath, $content);
         }
     }
 
