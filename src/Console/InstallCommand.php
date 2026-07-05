@@ -55,6 +55,7 @@ class InstallCommand extends Command
         $this->updateSessionConfig();
         $this->updateEnvironmentFile();
         $this->updateUserModel();
+        $this->updateUsersMigration();
         $this->requireComposerPackages();
         $this->updatePermissionConfig();
         $this->buildNodePackages();
@@ -485,6 +486,40 @@ PHP;
             }
 
             File::put($userModelPath, $content);
+        }
+    }
+
+    protected function updateUsersMigration()
+    {
+        $this->info('Updating users table migration...');
+        
+        $migrationFiles = File::glob(database_path('migrations/*_create_users_table.php'));
+        if (empty($migrationFiles)) {
+            return;
+        }
+
+        $migrationPath = $migrationFiles[0];
+        $content = File::get($migrationPath);
+
+        $columnsToInject = [];
+        
+        if (!str_contains($content, "\$table->string('username')")) {
+            $columnsToInject[] = "            \$table->string('username')->nullable();";
+        }
+        if (!str_contains($content, "\$table->string('role')")) {
+            $columnsToInject[] = "            \$table->string('role')->nullable();";
+        }
+        if (!str_contains($content, "\$table->string('avatar')")) {
+            $columnsToInject[] = "            \$table->string('avatar')->nullable();";
+        }
+        if (!str_contains($content, "\$table->boolean('is_active')")) {
+            $columnsToInject[] = "            \$table->boolean('is_active')->default(true);";
+        }
+
+        if (!empty($columnsToInject)) {
+            $injectionStr = implode("\n", $columnsToInject) . "\n";
+            $content = preg_replace('/(\$table->rememberToken\(\);)/', "$1\n" . $injectionStr, $content, 1);
+            File::put($migrationPath, $content);
         }
     }
 
