@@ -463,8 +463,17 @@ CSS;
 ];
 PHP;
                 $content = preg_replace('/\];\s*$/', $idleConfig, $content);
-                File::put($sessionConfigPath, $content);
             }
+
+            if (str_contains($content, "'expire_on_close' => false,")) {
+                $content = str_replace(
+                    "'expire_on_close' => false,",
+                    "'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', true),",
+                    $content
+                );
+            }
+            
+            File::put($sessionConfigPath, $content);
         }
     }
 
@@ -572,6 +581,7 @@ PHP;
         $envVars = [
             'IDLE_TIMEOUT_ENABLED' => 'true',
             'IDLE_TIMEOUT_MINUTES' => '5',
+            'SESSION_EXPIRE_ON_CLOSE' => 'true',
             'RECAPTCHA_SITE_KEY' => '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
             'RECAPTCHA_SECRET_KEY' => '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe',
             'ACTIVITY_LOG_RETENTION_DAYS' => '7',
